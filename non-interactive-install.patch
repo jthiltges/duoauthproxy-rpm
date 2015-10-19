@@ -1,0 +1,25 @@
+diff --git a/scripts/install b/scripts/install
+index 9542fd9..079dc23 100755
+--- a/scripts/install
++++ b/scripts/install
+@@ -374,7 +374,7 @@ class AuthproxyInstaller(object):
+ 
+     def install(self):
+         # user interaction
+-        self.show_license()
++        #self.show_license()
+         self.get_install_dir()
+         self.get_user()
+ 
+@@ -620,7 +620,10 @@ class AuthproxyInstaller(object):
+             print 'Failed to create uninstall script: %s' % e
+ 
+ def main(argv):
+-    installer = AuthproxyInstaller()
++    installer = AuthproxyInstaller(
++            install_dir=AuthproxyInstaller.INSTALL_DIR_DEFAULT,
++            service_user=AuthproxyInstaller.USER_DEFAULT,
++            do_initscript=True)
+     try:
+         installer.install()
+         return 0

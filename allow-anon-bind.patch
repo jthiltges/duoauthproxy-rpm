@@ -1,0 +1,22 @@
+Remove the check requiring a bind_dn
+
+The code assumes an Active Directory server. For a non-AD server, it works
+fine with an anonymous bind.
+
+diff -r -U3 duoauthproxy-2.4.12-src.orig/pkgs/duoauthproxy/duoauthproxy/modules/ad_client.py duoauthproxy-2.4.12-src/pkgs/duoauthproxy/duoauthproxy/modules/ad_client.py
+--- duoauthproxy-2.4.12-src.orig/pkgs/duoauthproxy/duoauthproxy/modules/ad_client.py	2015-08-04 08:39:11.000000000 -0500
++++ duoauthproxy-2.4.12-src/pkgs/duoauthproxy/duoauthproxy/modules/ad_client.py	2015-10-16 10:53:07.624913666 -0500
+@@ -293,13 +293,6 @@
+             ldap_filter = None
+ 
+         # validate configuration
+-        if (auth_type == ldap.client.AD_AUTH_TYPE_PLAIN and not bind_dn):
+-            raise base.ConfigError(
+-                'Missing required configuration item: if \'auth_type\' '
+-                'is \'plain\', then \'bind_dn\' is required')
+-        else:
+-            bind_dn = bind_dn or '<ROOT>'
+-
+         if (auth_type == ldap.client.AD_AUTH_TYPE_PLAIN
+             and transport_type == ldap.client.AD_TRANSPORT_CLEAR):
+             log.msg('WARNING: you have selected cleartext (plain) authentication for Active Directory')
