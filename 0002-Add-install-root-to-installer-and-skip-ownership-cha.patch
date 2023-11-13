@@ -1,0 +1,142 @@
+From 4831f3246b038fc497730f4d18700ed4b984f4de Mon Sep 17 00:00:00 2001
+From: John Thiltges <jthiltges2@unl.edu>
+Date: Wed, 8 Nov 2023 18:25:30 -0600
+Subject: [PATCH 2/2] Add --install-root to installer and skip ownership change
+
+---
+ .../linux_installer/authproxy_installer.py    | 38 ++++++++++---------
+ pkgs/duoauthproxy/scripts/install             |  1 +
+ 2 files changed, 22 insertions(+), 17 deletions(-)
+
+diff --git a/pkgs/duoauthproxy/duoauthproxy/linux_installer/authproxy_installer.py b/pkgs/duoauthproxy/duoauthproxy/linux_installer/authproxy_installer.py
+index f2399e6..0543807 100644
+--- a/pkgs/duoauthproxy/duoauthproxy/linux_installer/authproxy_installer.py
++++ b/pkgs/duoauthproxy/duoauthproxy/linux_installer/authproxy_installer.py
+@@ -321,6 +321,7 @@ class AuthproxyInstaller:
+         self,
+         src_dir,
+         install_dir=None,
++        install_root=None,
+         service_user=None,
+         log_group=None,
+         do_initscript=None,
+@@ -328,6 +329,7 @@ class AuthproxyInstaller:
+     ):
+         self.src_dir = src_dir
+         self.install_dir = install_dir
++        self.install_root = install_root
+         self.service_user = service_user
+         self.service_uid = None
+         self.log_group = log_group
+@@ -343,6 +345,7 @@ class AuthproxyInstaller:
+             "service_user": self.service_user,
+             "log_group": self.log_group,
+             "install_dir": self.install_dir,
++            "install_root": self.install_root,
+         }
+ 
+     def is_upgrade(self):
+@@ -438,8 +441,8 @@ class AuthproxyInstaller:
+         print("Copying files...", end=" ")
+         self.fix_directory_permissions()
+         self.copy_files()
+-        self.set_ownership()
+-        self.set_linux_secret_storage_permission()
++        #self.set_ownership()
++        #self.set_linux_secret_storage_permission()
+         print("Done.")
+ 
+         # post-install
+@@ -448,46 +451,46 @@ class AuthproxyInstaller:
+         python_executables = ["python", "python3.8", "python3"]
+         python_bin = os.path.join(self.install_dir, "usr", "local", "bin")
+         authproxy_bin = os.path.join(self.install_dir, "bin")
+-        for filename in self.io.listdir(python_bin):
++        for filename in self.io.listdir(self.install_root + python_bin):
+             if filename not in python_executables:
+-                self.replace_shebang(filename, python_bin)
++                self.replace_shebang(filename, self.install_root + python_bin)
+ 
+-        self.customize_script("authproxyctl", python_bin)
+-        self.customize_script("authproxy_update_sso_enrollment_code", python_bin)
+-        self.customize_script("duoauthproxy.tap", authproxy_bin)
++        self.customize_script("authproxyctl", self.install_root + python_bin)
++        self.customize_script("authproxy_update_sso_enrollment_code", self.install_root + python_bin)
++        self.customize_script("duoauthproxy.tap", self.install_root + authproxy_bin)
+ 
+         # Symlink user facing scripts to install_dir/bin for backwards compatability
+         self.io.create_symlink(
+             os.path.join(python_bin, "authproxy"),
+-            os.path.join(authproxy_bin, "authproxy"),
++            os.path.join(self.install_root + authproxy_bin, "authproxy"),
+         )
+         self.io.create_symlink(
+             os.path.join(python_bin, "authproxyctl"),
+-            os.path.join(authproxy_bin, "authproxyctl"),
++            os.path.join(self.install_root + authproxy_bin, "authproxyctl"),
+         )
+         self.io.create_symlink(
+             os.path.join(python_bin, "authproxy_connectivity_tool"),
+-            os.path.join(authproxy_bin, "authproxy_connectivity_tool"),
++            os.path.join(self.install_root + authproxy_bin, "authproxy_connectivity_tool"),
+         )
+         self.io.create_symlink(
+             os.path.join(python_bin, "authproxy_iframe_reconfiguration"),
+-            os.path.join(authproxy_bin, "authproxy_iframe_reconfiguration"),
++            os.path.join(self.install_root + authproxy_bin, "authproxy_iframe_reconfiguration"),
+         )
+         self.io.create_symlink(
+             os.path.join(python_bin, "authproxy_primary_only"),
+-            os.path.join(authproxy_bin, "authproxy_primary_only"),
++            os.path.join(self.install_root + authproxy_bin, "authproxy_primary_only"),
+         )
+         self.io.create_symlink(
+             os.path.join(python_bin, "authproxy_support"),
+-            os.path.join(authproxy_bin, "authproxy_support"),
++            os.path.join(self.install_root + authproxy_bin, "authproxy_support"),
+         )
+         self.io.create_symlink(
+             os.path.join(python_bin, "authproxy_update_sso_enrollment_code"),
+-            os.path.join(authproxy_bin, "authproxy_update_sso_enrollment_code"),
++            os.path.join(self.install_root + authproxy_bin, "authproxy_update_sso_enrollment_code"),
+         )
+ 
+-        self.create_initscript()
+-        self.create_uninstaller()
++        #self.create_initscript()
++        #self.create_uninstaller()
+ 
+         upgrader.finish()
+ 
+@@ -693,7 +696,7 @@ class AuthproxyInstaller:
+ 
+             self.io.copytree(
+                 self.src_dir,
+-                self.install_dir,
++                self.install_root + self.install_dir,
+                 symlinks=False,
+                 ignore=ignore_fcn,
+                 copy_function=copy_readable,
+@@ -996,6 +999,7 @@ def create_installer(src_dir, options):
+     return AuthproxyInstaller(
+         src_dir=src_dir,
+         install_dir=options.install_dir,
++        install_root=options.install_root,
+         service_user=options.service_user,
+         log_group=options.log_group,
+         do_initscript=do_initscript,
+diff --git a/pkgs/duoauthproxy/scripts/install b/pkgs/duoauthproxy/scripts/install
+index bb0dd61..b33a125 100755
+--- a/pkgs/duoauthproxy/scripts/install
++++ b/pkgs/duoauthproxy/scripts/install
+@@ -16,6 +16,7 @@ def main(argv):
+     parser = optparse.OptionParser()
+     parser.add_option('--install-dir', default=None,
+                       help='(The directory to where you want to install the authentication proxy. Recommendation: \'/opt/duoauthproxy\' Default: prompt)')
++    parser.add_option('--install-root', default='/')
+     parser.add_option('--service-user', default=None,
+                       help='(The name of the user account under which the Authentication Proxy should run. Recommendation: \'duo_authproxy_svc\' Default: prompt)')
+     parser.add_option('--log-group', default=None,
+-- 
+2.41.0
+

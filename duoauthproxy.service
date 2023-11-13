@@ -1,0 +1,14 @@
+[Unit]
+Description=Duo Security Authentication Proxy
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/opt/duoauthproxy/usr/local/bin/authproxyctl start
+ExecStop=/opt/duoauthproxy/usr/local/bin/authproxyctl stop
+StandardOutput=journal
+RemainAfterExit=true
+LimitNOFILE=1048576
+
+[Install]
+WantedBy=multi-user.target
