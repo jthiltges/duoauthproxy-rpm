@@ -1,5 +1,5 @@
 Name:           duoauthproxy
-Version:        6.1.0
+Version:        6.6.0
 Release:        1%{?dist}
 Summary:        Duo Authentication Proxy
 
@@ -20,6 +20,7 @@ Patch1:	        0002-Add-install-root-to-installer-and-skip-ownership-cha.patch
 # Bytecode compilation fails in lib2to3/tests/data/py3_test_grammar.py
 %global _python_bytecompile_errors_terminate_build 0
 %global __brp_mangle_shebangs_exclude_from %{install_dir}
+%global __requires_exclude_from ^%{install_dir}/usr/local/lib/python3.12/.*$
 
 BuildRequires: gcc
 BuildRequires: make
@@ -82,6 +83,9 @@ rm -rf %{buildroot}
 %{_unitdir}/%{name}.service
 
 %changelog
+* Thu Dec 11 2025 John Thiltges <> 6.6.0-1
+- Upstream release 6.6.0
+
 * Thu Feb 21 2019 John Thiltges <> 2.14.0-1
 - Upstream release 2.14.0
 
