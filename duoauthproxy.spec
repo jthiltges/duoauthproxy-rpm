@@ -1,5 +1,5 @@
 Name:           duoauthproxy
-Version:        6.6.0
+Version:        6.7.0
 Release:        1%{?dist}
 Summary:        Duo Authentication Proxy
 
@@ -83,6 +83,9 @@ rm -rf %{buildroot}
 %{_unitdir}/%{name}.service
 
 %changelog
+* Fri May 29 2026 Robert Cooper <> 6.7.0-1
+- Upstream release 6.7.0
+
 * Thu Dec 11 2025 John Thiltges <> 6.6.0-1
 - Upstream release 6.6.0
 
